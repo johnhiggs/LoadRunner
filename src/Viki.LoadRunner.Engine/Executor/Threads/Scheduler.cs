@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading;
+using Viki.LoadRunner.Engine.Executor.Context;
 using Viki.LoadRunner.Engine.Executor.Timer;
 using Viki.LoadRunner.Engine.Strategies;
 
@@ -8,26 +9,28 @@ namespace Viki.LoadRunner.Engine.Executor.Threads
     public class Scheduler : ISchedule
     {
         private readonly ISpeedStrategy _strategy;
-        private readonly IThreadContext _context;
+        //private readonly ISchedulerContext _context;
         private readonly IThreadPoolCounter _counter;
 
         private readonly TimeSpan _oneSecond = TimeSpan.FromSeconds(1);
 
         public ITimer Timer { get; }
 
-        public Scheduler(ISpeedStrategy strategy, IThreadContext context, IThreadPoolCounter counter)
+        public Scheduler(ISpeedStrategy strategy, ITestContextControl testContext, IThreadPoolStats stats, IThreadPoolCounter counter, ITimer timer)
         {
             if (strategy == null)
                 throw new ArgumentNullException(nameof(strategy));
-            if (context == null)
-                throw new ArgumentNullException(nameof(context));
+            if (testContext == null)
+                throw new ArgumentNullException(nameof(testContext));
+
             if (counter == null)
                 throw new ArgumentNullException(nameof(counter));
 
             _strategy = strategy;
-            _context = context;
             _counter = counter;
-            Timer = context.Timer;
+            Timer = timer;
+
+            //_context = new SchedulerContext(stats, Timer, testContext);
         }
 
         public ScheduleAction Action { get; set; } = ScheduleAction.Execute; 
@@ -54,6 +57,8 @@ namespace Viki.LoadRunner.Engine.Executor.Threads
 
         public bool Execute(ref bool cancellationToken)
         {
+            _testContext.Reset(threadIterationId++, _context.IdFactory.Next());
+
             _strategy.Next(_context, this);
 
             TimeSpan delay = CalculateDelay();

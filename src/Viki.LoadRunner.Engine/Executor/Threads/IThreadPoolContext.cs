@@ -11,7 +11,6 @@ namespace Viki.LoadRunner.Engine.Executor.Threads
         object UserData { get; }
         Type Scenario { get; }
         IResultsAggregator Aggregator { get; }
-
         IThreadPoolStats ThreadPool { get; }
         ITimer Timer { get; }
     }

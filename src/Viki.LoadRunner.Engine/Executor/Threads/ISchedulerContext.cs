@@ -3,7 +3,7 @@ using Viki.LoadRunner.Engine.Executor.Timer;
 
 namespace Viki.LoadRunner.Engine.Executor.Threads
 {
-    public interface IThreadContext
+    public interface ISchedulerContext
     {
         IThreadPoolStats ThreadPool { get; }
         ITimer Timer { get; }

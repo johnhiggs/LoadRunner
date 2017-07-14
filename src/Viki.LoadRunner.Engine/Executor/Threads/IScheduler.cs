@@ -14,11 +14,10 @@ namespace Viki.LoadRunner.Engine.Executor.Threads
     {
         ITimer Timer { get; }
 
-        ScheduleAction Action { get; set; }
-        TimeSpan At { get; set; }
-
-        void Idle(TimeSpan delay);
-        void ExecuteAt(TimeSpan at);
+        /// <summary>
+        /// Sleeps till next iteration execution treshold.
+        /// </summary>
+        bool Next(ref bool cancellationToken);
     }
 
     public interface ISchedule

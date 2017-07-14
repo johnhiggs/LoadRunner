@@ -175,6 +175,7 @@ namespace Viki.LoadRunner.Engine.Executor.Threads
         {
             for (int i = 0; i < threadCount; i++)
             {
+                Scheduler scheduler = new Scheduler();
                 yield return new WorkerThread(_context, _nextThreadId++);
             }
         }

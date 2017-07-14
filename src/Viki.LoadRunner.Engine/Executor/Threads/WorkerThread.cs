@@ -14,14 +14,15 @@ namespace Viki.LoadRunner.Engine.Executor.Threads
     /// </summary>
     public class WorkerThread : IDisposable
     {
-        private readonly ThreadPoolContext _context;
+        //private readonly IThreadPoolContext _context;
 
         #region Properties
 
         private readonly Thread _handlerThread;
         private readonly ILoadTestScenario _scenario;
 
-        private readonly TestContext _testContext;
+        private readonly ITestContextControl _testContext;
+        private readonly IScheduler _scheduler;
         private bool _stopQueued;
 
         public bool QueuedToStop => _stopQueued;
@@ -34,15 +35,16 @@ namespace Viki.LoadRunner.Engine.Executor.Threads
 
         #region Ctor
 
-        public WorkerThread(ThreadPoolContext context, int threadId)
+        public WorkerThread(ITestContextControl testContext, IScheduler scheduler)
         {
-            if (context == null)
-                throw new ArgumentNullException(nameof(context));
+            if (testContext == null)
+                throw new ArgumentNullException(nameof(testContext));
+            if (scheduler == null)
+                throw new ArgumentNullException(nameof(scheduler));
 
-            _context = context;
+            _testContext = testContext;
+            _scheduler = scheduler;
 
-
-            _testContext = new TestContext(threadId, _context.Timer, _context.UserData);
             _scenario = (ILoadTestScenario)Activator.CreateInstance(_context.Scenario);
 
             _handlerThread = new Thread(ExecuteScenarioThreadFunction);
@@ -129,21 +131,18 @@ namespace Viki.LoadRunner.Engine.Executor.Threads
         {
             try
             { 
-                IThreadContext threadContext = new ThreadContext(_context.ThreadPool, _context.Timer, _testContext);
-                Scheduler scheduler = new Scheduler(_context.Speed, threadContext, _context.ThreadPool);
-
                 int threadIterationId = 0;
 
                 ExecuteScenarioSetup();
 
                 // Wait for ITimer to start.
-                while (_context.Timer.IsRunning == false && _stopQueued == false)
+                while (_scheduler.Timer.IsRunning == false && _stopQueued == false)
                     Thread.Sleep(1);
 
                 if (!_stopQueued)
                     _testContext.Reset(threadIterationId++, _context.IdFactory.Next());
 
-                while (scheduler.Execute(ref _stopQueued) == false)
+                while (_scheduler.Next(ref _stopQueued) == false)
                 {
                     ExecuteIteration(_testContext, _scenario);
 
@@ -165,7 +164,7 @@ namespace Viki.LoadRunner.Engine.Executor.Threads
             }
         }
 
-        public static void ExecuteIteration(TestContext context, ILoadTestScenario scenario)
+        public static void ExecuteIteration(ITestContext context, ILoadTestScenario scenario)
         {
             context.Checkpoint(Checkpoint.Names.Setup);
             bool setupSuccess = ExecuteWithExceptionHandling(() => scenario.IterationSetup(context), context);

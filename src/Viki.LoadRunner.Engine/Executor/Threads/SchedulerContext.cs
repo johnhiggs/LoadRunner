@@ -4,9 +4,9 @@ using Viki.LoadRunner.Engine.Executor.Timer;
 
 namespace Viki.LoadRunner.Engine.Executor.Threads
 {
-    public class ThreadContext : IThreadContext
+    public class SchedulerContext : ISchedulerContext
     {
-        public ThreadContext(IThreadPoolStats threadPool, ITimer timer, IIterationMetadata<object> iteration)
+        public SchedulerContext(IThreadPoolStats threadPool, ITimer timer, IIterationMetadata<object> iteration)
         {
             if (threadPool == null)
                 throw new ArgumentNullException(nameof(threadPool));
